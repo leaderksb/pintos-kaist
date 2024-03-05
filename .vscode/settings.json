@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "filesys.h": "c",
+        "thread.h": "c",
+        "interrupt.h": "c",
+        "intr-stubs.h": "c",
+        "string.h": "c"
+    }
+}

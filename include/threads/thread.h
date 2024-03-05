@@ -91,9 +91,10 @@ struct thread {
 	enum thread_status status;          /* Thread state. */
 	char name[16];                      /* Name (for debugging purposes). */
 	int priority;                       /* Priority. */
+	int64_t ticks_sleep;  // 대기 시간(틱 단위)
 
 	/* Shared between thread.c and synch.c. */
-	struct list_elem elem;              /* List element. */
+	struct list_elem elem;  // 리스트 요소
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
@@ -142,5 +143,7 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 void do_iret (struct intr_frame *tf);
+void thread_sleep(int64_t);
+void thread_wake(int64_t);
 
 #endif /* threads/thread.h */
