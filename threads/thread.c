@@ -263,11 +263,6 @@ tid_t thread_create(const char *name, int priority,
 	/* Add to run queue. */
 	thread_unblock(t);
 
-	/*
-	우리는 스레드 차단을 해제한 후 현재 실행 중인 스레드의 우선 순위를 비교
-	
-	*/
-
 	return tid;
 }
 
