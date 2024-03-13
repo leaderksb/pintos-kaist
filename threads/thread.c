@@ -262,10 +262,11 @@ tid_t thread_create(const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock(t);
-	// ready_list에 스레드가 삽입 후
-	// 현재 실행중인 스레드와 ready_list에 있는 스레드의 priority를 비교
-	// priority가 더 높은 스레드가 ready_list에 있다면 즉시 양보
-	preempt_priority();
+
+	/*
+	우리는 스레드 차단을 해제한 후 현재 실행 중인 스레드의 우선 순위를 비교
+	
+	*/
 
 	return tid;
 }
