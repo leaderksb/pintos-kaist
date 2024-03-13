@@ -231,7 +231,11 @@ void thread_print_stats(void)
 tid_t thread_create(const char *name, int priority,
 					thread_func *function, void *aux)
 {
+	// 초기화할 스레드
 	struct thread *t;
+	// 현재 동작 중인 스레드
+	struct thread *curr = thread_current();
+
 	tid_t tid;
 
 	ASSERT(function != NULL);
@@ -258,11 +262,10 @@ tid_t thread_create(const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock(t);
-
-	/*
-	우리는 스레드 차단을 해제한 후 현재 실행 중인 스레드의 우선 순위를 비교
-	
-	*/
+	// ready_list에 스레드가 삽입 후
+	// 현재 실행중인 스레드와 ready_list에 있는 스레드의 priority를 비교
+	// priority가 더 높은 스레드가 ready_list에 있다면 즉시 양보
+	preempt_priority();
 
 	return tid;
 }
@@ -299,7 +302,9 @@ void thread_unblock(struct thread *t)
 	// 이전 인터럽트 상태를 저장
 	old_level = intr_disable();
 	ASSERT(t->status == THREAD_BLOCKED);
-	list_push_back(&ready_list, &t->elem);
+	
+	list_insert_ordered(&ready_list, &t->elem, cmp_big_priority, NULL);
+
 	t->status = THREAD_READY;
 	// 인터럽트 상태를 이전 상태로 복원
 	intr_set_level(old_level);
@@ -364,11 +369,18 @@ void thread_yield(void)
 	ASSERT(!intr_context());
 
 	old_level = intr_disable();
+
+	// 현재 스레드가 노는 스레드가 아니라면
 	if (curr != idle_thread)
-		// 현재 돌아가던 스레드를
-		// 준비된 스레드 목록에 넣음
-		list_push_back(&ready_list, &curr->elem);
-	// 돌던 스레드를 블로킹 하자
+	{
+		// 우선순위대로 ready_list에 삽입
+		list_insert_ordered(&ready_list, &curr->elem, cmp_big_priority, NULL);
+		
+		// 준비된 스레드 목록에 삽입
+		// list_push_back(&ready_list, &curr->elem);
+	}
+
+	// RUNNING 스레드를 READY로 대기
 	do_schedule(THREAD_READY);
 	intr_set_level(old_level);
 }
@@ -376,13 +388,14 @@ void thread_yield(void)
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void thread_set_priority(int new_priority)
 {
-	thread_current()->priority = new_priority;
+	thread_current()->now_priority = new_priority;
+	preempt_priority();
 }
 
 /* Returns the current thread's priority. */
 int thread_get_priority(void)
 {
-	return thread_current()->priority;
+	return thread_current()->now_priority;
 }
 
 /* Sets the current thread's nice value to NICE. */ // 스레드 우선순위 설정
@@ -475,7 +488,7 @@ init_thread(struct thread *t, const char *name, int priority)
 	t->status = THREAD_BLOCKED;
 	strlcpy(t->name, name, sizeof t->name);
 	t->tf.rsp = (uint64_t)t + PGSIZE - sizeof(void *);
-	t->priority = priority;
+	t->now_priority = priority;
 	t->magic = THREAD_MAGIC;
 }
 
@@ -666,4 +679,36 @@ allocate_tid(void)
 	lock_release(&tid_lock);
 
 	return tid;
+}
+
+bool cmp_big_priority(struct list_elem *check_elem, struct list_elem *visit_elem, void *aux UNUSED)
+{
+	struct thread *check_thread = list_entry(check_elem, struct thread, elem);
+	struct thread *visit_thread = list_entry(visit_elem, struct thread, elem);
+
+	// 확인 중인 스레드의 우선순위가 리스트에 순회 중인 스레드의 우선순위 보다 크다면
+	return check_thread->now_priority > visit_thread->now_priority;
+}
+
+// 현재 실행중인 스레드와 ready_list에 있는 스레드의 priority를 비교
+// priority가 더 높은 스레드가 ready_list에 있다면 즉시 양보
+void preempt_priority(void)
+{
+	if (thread_current() == idle_thread)
+	{
+		return;
+	}
+	else if (list_empty(&ready_list))
+	{
+		return;
+	}
+
+	struct thread *curr = thread_current();
+	struct thread *ready = list_entry(list_front(&ready_list), struct thread, elem);
+
+	// ready_list에 현재 실행중인 스레드보다 우선순위가 높은 스레드가 있으면
+	if (curr->now_priority < ready->now_priority)
+	{
+		thread_yield();
+	}
 }

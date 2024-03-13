@@ -122,7 +122,7 @@ void timer_sleep(int64_t ticks_much)
 	int64_t ticks_now = timer_ticks();
 
 	ASSERT(intr_get_level() == INTR_ON);
-	// 양도를 얼마나 했는가
+	// 양보를 얼마나 했는가
 	// while (timer_elapsed(start) < ticks)
 	// {
 	// 	thread_yield();

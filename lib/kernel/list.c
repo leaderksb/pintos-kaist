@@ -415,19 +415,19 @@ list_sort (struct list *list, list_less_func *less, void *aux) {
 /* Inserts ELEM in the proper position in LIST, which must be
    sorted according to LESS given auxiliary data AUX.
    Runs in O(n) average case in the number of elements in LIST. */
-void
-list_insert_ordered (struct list *list, struct list_elem *elem,
-		list_less_func *less, void *aux) {
-	struct list_elem *e;
+void list_insert_ordered(struct list *list, struct list_elem *check_elem, list_less_func *less, void *aux)
+{
+	struct list_elem *visit_elem;
 
-	ASSERT (list != NULL);
-	ASSERT (elem != NULL);
-	ASSERT (less != NULL);
+	ASSERT(list != NULL);
+	ASSERT(check_elem != NULL);
+	ASSERT(less != NULL);
 
-	for (e = list_begin (list); e != list_end (list); e = list_next (e))
-		if (less (elem, e, aux))
+	for (visit_elem = list_begin(list); visit_elem != list_end(list); visit_elem = list_next(visit_elem))
+		if (less(check_elem, visit_elem, aux))
 			break;
-	return list_insert (e, elem);
+	// visit_elem 앞에 check_elem 삽입
+	return list_insert(visit_elem, check_elem);
 }
 
 /* Iterates through LIST and removes all but the first in each
