@@ -90,11 +90,10 @@ struct thread {
 	tid_t tid;                          /* Thread identifier. */
 	enum thread_status status;          /* Thread state. */
 	char name[16];                      /* Name (for debugging purposes). */
-	int now_priority;                       /* Priority. */
-	int64_t ticks_sleep;  // 대기 시간(틱 단위)
+	int priority;                       /* Priority. */
 
 	/* Shared between thread.c and synch.c. */
-	struct list_elem elem;  // 리스트 요소
+	struct list_elem elem;              /* List element. */
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
@@ -143,9 +142,5 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 void do_iret (struct intr_frame *tf);
-void thread_sleep(int64_t);
-void thread_wake(int64_t);
-bool cmp_big_priority(struct list_elem *check_elem, struct list_elem *visit_elem, void *aux UNUSED);
-void preempt_priority(void);
 
 #endif /* threads/thread.h */
