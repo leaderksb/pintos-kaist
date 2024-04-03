@@ -4,6 +4,8 @@
         "thread.h": "c",
         "interrupt.h": "c",
         "intr-stubs.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "timer.h": "c",
+        "vm.h": "c"
     }
 }
